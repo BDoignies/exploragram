@@ -66,6 +66,7 @@
 
 #include <geogram/bibliography/bibliography.h>
 
+ValueCallback ValueCallback::_instance;
 
 namespace GEO {
 
@@ -74,6 +75,11 @@ namespace GEO {
     OptimalTransportMap::Callback::~Callback() {
     }
     
+    double OptimalTransportMap::getValue() const
+    {
+        return ValueCallback::_instance.lastValue;
+    }
+
     OptimalTransportMap::OptimalTransportMap(
 	index_t dimension,
         Mesh* mesh, const std::string& delaunay, bool BRIO
@@ -233,6 +239,7 @@ namespace GEO {
 	    if(verbose_) {
 		std::cerr << "======= k = " << k << std::endl;
 	    }
+            ValueCallback::GetInstance().clear();
             xk=weights_;
 
             new_linear_system(n,pk.data());

@@ -45,6 +45,39 @@
 struct NLMatrixStruct;
 typedef NLMatrixStruct* NLMatrix;
 
+#include <array>
+class ValueCallback
+{
+public:
+	static ValueCallback _instance;
+
+    static ValueCallback& GetInstance()
+    {
+		return _instance;
+	}
+
+    double getValue() const 
+    {
+        double val = 0.;
+        for (unsigned int i = 0; i < values.size(); i++)
+            val += values[i];
+        return val;
+    }        
+
+    void clear()
+    {
+		lastValue = getValue();
+        for (unsigned int i = 0; i < values.size(); i++)
+        {
+			values[i] = 0.;
+    	}
+	}
+
+public:
+	double lastValue = 0;
+    std::array<double, 32> values;
+};
+
 namespace GEO {
     /**
      * \brief Specifies the linear solver to be used
@@ -604,6 +637,8 @@ namespace GEO {
         }
 
       public:
+
+	  	double getValue() const;
 
 	/**
 	 * \brief Base class for the callbacks executed for each intersection

@@ -48,7 +48,6 @@
  * \brief Solver for semi-discrete optimal transport in 3d (
  *  multilevel and Newton).
  */
-
 namespace GEO {
     
     class RVDPolyhedronCallback;

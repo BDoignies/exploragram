@@ -202,14 +202,15 @@ namespace {
 		// Spinlocks are managed internally by update_Hessian().
 		update_Hessian(C, v);
 	    }
-
-	    if(eval_F_) {
+	    if(true || eval_F_) {
 		Thread* thread = Thread::current();
 		index_t current_thread_id =
 		    (thread == nullptr) ? 0 : thread->id();
-		double F = weighted_ ? eval_F_weighted(C, v) : eval_F(C, v);
+        double rF = 0.;
+		double F = weighted_ ? eval_F_weighted(C, v, &rF) : eval_F(C, v, &rF);
 		const_cast<OTMPolyhedronCallback*>(this)->
 		    funcval_[current_thread_id] += F;
+        ValueCallback::GetInstance().values[current_thread_id] += rF;
 	    }
 	}
 
@@ -420,7 +421,7 @@ namespace {
 	 * \param[in] C a const reference to the current ConvexCell
 	 * \param[in] v the current seed
 	 */
-	double eval_F(const GEOGen::ConvexCell& C, index_t v) const {
+	double eval_F(const GEOGen::ConvexCell& C, index_t v, double* rf) const {
 
 	    // Note: we compute F as a sum of integrals over (signed)
 	    // tetrahedra; formed by vertex v and triplets of cell
@@ -432,6 +433,7 @@ namespace {
 	    geo_debug_assert(!weighted_);
 	    
 	    double F = 0.0;
+        *rf = 0.0;
 	    
 	    // Iterate on all the vertices of the convex cell.
 	    // The vertices associated to no triangle are skipped.
@@ -481,6 +483,7 @@ namespace {
 				Wc * Uc;
 			}
 			fT = m * (fT / 10.0 - w_[v]);
+            *rf += m * fT / 10.0;
 			F += fT;
 		    }
 		    C.move_to_next_around_vertex(c);
@@ -497,8 +500,9 @@ namespace {
 	 * \param[in] C a const reference to the current ConvexCell
 	 * \param[in] v the current seed
 	 */
-	double eval_F_weighted(const GEOGen::ConvexCell& C, index_t v) const {
+	double eval_F_weighted(const GEOGen::ConvexCell& C, index_t v, double* rf) const {
 	    double F = 0.0;
+        *rf = 0.0;
 
 	    
 	    // Find one vertex V0 of the Convex Cell. It will be then decomposed
@@ -615,7 +619,7 @@ namespace {
 			fT += (alpha[3] + rho[3]) * dotprod_33;  
 
 			fT = Tvol * fT / 60.0 - m * w_[v];
-	    
+            *rf += Tvol * fT / 60.0;
 			F += fT;
 		    }
 		    C.move_to_next_around_vertex(c);
